@@ -1,16 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule, } from '@angular/forms';
 
 @Component({
-  selector: 'app-ventas',
+  selector: 'app-compras',
   imports: [FormsModule],
-  templateUrl: './ventas.component.html',
+  templateUrl: './compras.component.html',
   styles: ``
 })
-export class VentasComponent {
+export class ComprasComponent implements OnInit {
 
-  // Ventas
-  ventas: any = [];
+
+  // Compras
+  compras: any = [];
   searchTimeout: any;
 
   loading = true;
@@ -60,9 +61,10 @@ export class VentasComponent {
   constructor(
 
   ) {
+
+
+
   }
-
-
 
   // onInit
   ngOnInit(): void {
@@ -75,13 +77,42 @@ export class VentasComponent {
 
   }
 
+  // Methods
+  cargarCompras() {
+    this.loading = true;
 
-    // Helpers Methods
+    console.log("CARGANDO COMPRAS...");
+
+    // this.expedienteService.listarExpedientes({
+    //   page: this.page,
+    //   limit: this.limit,
+    //   search: this.filtroSearch?.trim() || undefined,
+    //   mes: this.filtroMes || undefined,
+    //   anio: this.filtroAnio || undefined,
+    //   rol: this.rol || 'secretaria',
+    // }).subscribe({
+    //   next: (resp) => {
+    //     this.expedientes = resp.data;
+    //     this.totalItems = resp.total;
+    //     this.totalPages = resp.totalPages;
+    //     this.currentPage = resp.page;
+    //     this.loading = false;
+    //   },
+    //   error: (err) => {
+    //     this.loading = false;
+    //     this.errorMessage = 'Error al cargar los expedientes';
+    //   },
+    // });
+  }
+
+  // Helpers Methods
   aplicarFiltros() {
     throw new Error('Method not implemented.');
   }
   onSearchChange() {
     throw new Error('Method not implemented.');
   }
+
+
 
 }

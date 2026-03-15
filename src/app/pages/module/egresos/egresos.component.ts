@@ -2,15 +2,14 @@ import { Component } from '@angular/core';
 import { FormsModule, } from '@angular/forms';
 
 @Component({
-  selector: 'app-ventas',
+  selector: 'app-egresos',
   imports: [FormsModule],
-  templateUrl: './ventas.component.html',
+  templateUrl: './egresos.component.html',
   styles: ``
 })
-export class VentasComponent {
-
-  // Ventas
-  ventas: any = [];
+export class EgresosComponent {
+  // Ingresos
+  egresos: any = [];
   searchTimeout: any;
 
   loading = true;
@@ -76,12 +75,11 @@ export class VentasComponent {
   }
 
 
-    // Helpers Methods
+  // Helpers Methods
   aplicarFiltros() {
     throw new Error('Method not implemented.');
   }
   onSearchChange() {
     throw new Error('Method not implemented.');
   }
-
 }
