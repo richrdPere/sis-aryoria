@@ -1,1 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
+layer(base);
+
 /* You can add global styles to this file, and also import other style files */
+@import "tailwindcss";
+@plugin "daisyui";
+@import "swiper/css/bundle";
+
+
+.menu-active{
+  @apply bg-blue-100 text-blue-600 font-medium;
+}
