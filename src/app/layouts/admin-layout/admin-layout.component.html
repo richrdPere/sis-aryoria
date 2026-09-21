@@ -1,0 +1,289 @@
+<div class="min-h-screen bg-base-200">
+
+  <!-- ===================================================== -->
+  <!-- OVERLAY MÓVIL -->
+  <!-- ===================================================== -->
+
+  @if (sidebarOpen()) {
+    <button type="button"
+      class="fixed inset-0 z-40 bg-neutral/50 backdrop-blur-[2px] lg:hidden"
+      aria-label="Cerrar menú lateral"
+      (click)="closeSidebar()">
+    </button>
+  }
+
+  <!-- ===================================================== -->
+  <!-- SIDEBAR -->
+  <!-- ===================================================== -->
+
+  <aside
+    class="fixed inset-y-0 left-0 z-50 flex w-71.25 flex-col border-r border-base-300 bg-base-100 shadow-xl transition-transform duration-300 lg:translate-x-0 lg:shadow-none"
+    [class.-translate-x-full]="!sidebarOpen()" [class.translate-x-0]="sidebarOpen()">
+
+    <!-- Logo -->
+
+    <div class="flex h-20 items-center justify-between border-b border-base-300 px-5">
+
+      <a routerLink="/admin/dashboard"
+        class="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+
+        <div
+          class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-md shadow-primary/20">
+          <span class="text-lg font-black">
+            A
+          </span>
+        </div>
+
+        <div class="min-w-0">
+          <p class="truncate text-xl font-black tracking-tight text-base-content">
+            Aryoria
+          </p>
+
+          <p class="truncate text-[10px] font-semibold uppercase tracking-[0.15em] text-base-content/45">
+            Administración
+          </p>
+        </div>
+      </a>
+
+      <button type="button"
+        class="btn btn-ghost btn-sm btn-square lg:hidden"
+        aria-label="Cerrar menú"
+        (click)="closeSidebar()">
+
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Navegación -->
+
+    <nav class="flex-1 overflow-y-auto px-3 py-5" aria-label="Navegación administrativa">
+
+      @for (group of navigationGroups; track group.title) {
+        <section class="mb-7">
+
+          <h2 class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-base-content/40">
+            {{ group.title }}
+          </h2>
+
+          <ul class="space-y-1">
+            @for (item of group.items; track item.route) {
+              <li>
+                <a [routerLink]="item.route"
+                  routerLinkActive="bg-primary text-primary-content shadow-sm"
+                  [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                  class="group flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-base-content/65 transition-all duration-200 hover:bg-base-200 hover:text-base-content">
+
+                  <span
+                    class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-base-200 text-base-content/55 transition-colors group-hover:bg-base-300">
+                    <i [class]="item.icon"></i>
+                  </span>
+
+                  <span class="truncate">
+                    {{ item.label }}
+                  </span>
+                </a>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </nav>
+
+    <!-- Usuario sidebar -->
+
+    <div class="border-t border-base-300 p-3">
+      <div class="flex items-center gap-3 rounded-2xl bg-base-200 p-3">
+
+        <div class="avatar placeholder">
+          <div class="w-10 rounded-xl bg-primary text-primary-content">
+            <span class="text-xs font-bold">
+              {{ userInitials() }}
+            </span>
+          </div>
+        </div>
+
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-bold text-base-content">
+            {{ userFullName() }}
+          </p>
+
+          <p class="truncate text-xs text-base-content/50">
+            {{ userRole() }}
+          </p>
+        </div>
+
+        <button type="button"
+          class="btn btn-ghost btn-sm btn-square text-error"
+          aria-label="Cerrar sesión"
+          [disabled]="isLoggingOut()"
+          (click)="logout()">
+
+          @if (isLoggingOut()) {
+            <span class="loading loading-spinner loading-xs"></span>
+          } @else {
+            <i class="fa-solid fa-right-from-bracket"></i>
+          }
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================================================== -->
+  <!-- CONTENIDO PRINCIPAL -->
+  <!-- ===================================================== -->
+
+  <div class="min-h-screen transition-[margin] duration-300 lg:ml-71.25">
+
+    <!-- Header -->
+
+    <header class="sticky top-0 z-30 border-b border-base-300 bg-base-100/95 backdrop-blur">
+
+      <div class="flex h-20 items-center gap-3 px-4 sm:px-6 lg:px-8">
+
+        <!-- Menú móvil -->
+
+        <button type="button"
+          class="btn btn-ghost btn-square lg:hidden"
+          aria-label="Abrir menú"
+          (click)="toggleSidebar()">
+
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+
+        <!-- Título -->
+
+        <div class="min-w-0 flex-1">
+          <h1 class="truncate text-lg font-black text-base-content sm:text-xl">
+            Panel administrativo
+          </h1>
+
+          <p class="hidden text-xs text-base-content/50 sm:block">
+            Gestión general de la plataforma Aryoria
+          </p>
+        </div>
+
+        <!-- Acciones -->
+
+        <div class="flex items-center gap-1 sm:gap-2">
+
+          <!-- Tema -->
+
+          <button type="button"
+            class="btn btn-ghost btn-square"
+            [attr.aria-label]="isDarkMode() ? 'Activar modo claro' : 'Activar modo oscuro'"
+            (click)="toggleTheme()">
+
+            @if (isDarkMode()) {
+              <i class="fa-solid fa-sun"></i>
+            } @else {
+              <i class="fa-solid fa-moon"></i>
+            }
+          </button>
+
+          <!-- Notificaciones -->
+
+          <button type="button"
+            class="btn btn-ghost btn-square relative"
+            aria-label="Notificaciones">
+
+            <i class="fa-regular fa-bell"></i>
+
+            <span class="absolute right-2 top-2 h-2 w-2 rounded-full bg-error ring-2 ring-base-100">
+            </span>
+          </button>
+
+          <!-- Perfil -->
+
+          <div class="relative">
+
+            <button type="button"
+              class="flex items-center gap-2 rounded-xl px-2 py-1.5 transition-colors hover:bg-base-200"
+              aria-label="Menú del usuario"
+              [attr.aria-expanded]="profileMenuOpen()"
+              (click)="toggleProfileMenu()">
+
+              <div class="avatar placeholder">
+                <div class="w-9 rounded-xl bg-primary text-primary-content">
+                  <span class="text-xs font-bold">
+                    {{ userInitials() }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="hidden min-w-0 text-left xl:block">
+                <p class="max-w-40 truncate text-xs font-bold text-base-content">
+                  {{ userFullName() }}
+                </p>
+
+                <p class="max-w-40 truncate text-[10px] text-base-content/50">
+                  {{ userRole() }}
+                </p>
+              </div>
+
+              <i class="fa-solid fa-chevron-down hidden text-[10px] text-base-content/40 sm:block"></i>
+            </button>
+
+            @if (profileMenuOpen()) {
+              <div
+                class="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-xl">
+
+                <div class="border-b border-base-300 p-4">
+                  <p class="truncate text-sm font-bold">
+                    {{ userFullName() }}
+                  </p>
+
+                  <p class="mt-1 truncate text-xs text-base-content/50">
+                    {{ currentUser()?.persona}}
+                  </p>
+                </div>
+
+                <div class="p-2">
+                  <button type="button"
+                    class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-base-200"
+                    (click)="goToProfile()">
+
+                    <i class="fa-regular fa-user w-5 text-center"></i>
+
+                    Mi perfil
+                  </button>
+
+                  <button type="button"
+                    class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors hover:bg-base-200"
+                    routerLink="/admin/configuracion"
+                    (click)="closeProfileMenu()">
+
+                    <i class="fa-solid fa-gear w-5 text-center"></i>
+
+                    Configuración
+                  </button>
+                </div>
+
+                <div class="border-t border-base-300 p-2">
+                  <button type="button"
+                    class="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-error transition-colors hover:bg-error/10"
+                    [disabled]="isLoggingOut()"
+                    (click)="logout()">
+
+                    @if (isLoggingOut()) {
+                      <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                      <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                    }
+
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Router outlet -->
+
+    <main class="min-h-[calc(100vh-5rem)] p-4 sm:p-6 lg:p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

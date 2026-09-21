@@ -1,6 +1,42 @@
+@import "tailwindcss";
+
+/*
+ * styles.css está dentro de src, por eso la ruta hacia
+ * los componentes Angular comienza en ./app.
+ */
+@source "./app/**/*.{html,ts}";
+
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+
+/* =========================================================
+   Estructura global
+   ========================================================= */
+
+html,
+body {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+app-root {
+  display: block;
+  width: 100%;
+  min-height: 100dvh;
+}
+
+/*
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap") layer(base);
 
-/* You can add global styles to this file, and also import other style files */
 @import "tailwindcss";
 @plugin "daisyui";
 @import "swiper/css/bundle";
@@ -28,3 +64,4 @@
   --text-theme-xs: 12px;
   --text-theme-xs--line-height: 18px;
 }
+*/

@@ -1,11 +1,6 @@
 import { ApiResponse } from "src/app/core/interfaces/api-response.model";
-import { AuthPerson, AuthUser } from "../login/login-response.model";
-
-export type AuthDeviceType =
-  | 'WEB'
-  | 'ANDROID'
-  | 'IOS'
-  | 'OTRO';
+import { AuthPerson, AuthTokenExpiration, AuthUser } from "../login/login-response.model";
+import { AuthDeviceType } from "../login/login-request.model";
 
 // ==========================================================
 // Persona
@@ -53,15 +48,6 @@ export interface RegisterRequest {
 }
 
 // ==========================================================
-// Expiración de tokens
-// ==========================================================
-
-export interface AuthTokenExpiration {
-  access_token: number;
-  refresh_token: number;
-}
-
-// ==========================================================
 // Sesión creada por el backend
 // ==========================================================
 
@@ -74,53 +60,12 @@ export interface AuthSessionData {
 }
 
 
-// export interface AuthPerson {
-//   id_persona: number;
-//   nombres: string;
-//   apellidos: string;
-
-//   documento_identidad:
-//   string | null;
-
-//   tipo_documento:
-//   string | null;
-
-//   fecha_nacimiento:
-//   string | null;
-
-//   telefono:
-//   string | null;
-
-//   foto_url:
-//   string | null;
-
-//   genero:
-//   string | null;
-
-//   direccion:
-//   string | null;
-// }
-
 export type AryoriaRole =
   | 'SUPER_ADMIN'
   | 'ADMIN'
   | 'EMPLEADO'
   | 'CONTADOR'
   | 'USUARIO';
-
-// export interface AuthUser {
-//   id_usuario: number;
-//   id_persona: number;
-//   email: string;
-//   username: string;
-//   estado: boolean;
-
-//   ultimo_acceso: string | null;
-
-//   persona: AuthPerson | null;
-
-//   roles: AryoriaRole[];
-// }
 
 // ==========================================================
 // Data del registro
@@ -149,11 +94,5 @@ export interface RegisterData {
 // ==========================================================
 // Response
 // ==========================================================
-
-// export interface RegisterResponse {
-//   success: boolean;
-//   message: string;
-//   data: RegisterData;
-// }
 
 export type RegisterResponse = ApiResponse<RegisterData>;

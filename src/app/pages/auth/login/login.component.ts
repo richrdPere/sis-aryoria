@@ -1,95 +1,218 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
 
-// Izitoast
+// IziToast
 import iziToast from 'izitoast';
 
-// Service
-import { AuthService } from 'src/app/services/auth.service';
+// Services
+import { AuthService } from 'src/app/core/auth/auth.service';
+
+// Interfaces
+import { AuthRoleName, LoginRequest } from 'src/app/core/auth/interfaces';
+import { ApiErrorData } from 'src/app/core/interfaces/api-error-data.model';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, CommonModule],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterLink,
+  ],
   templateUrl: './login.component.html',
-  styles: ``
+  styles: [],
 })
 export class LoginComponent implements OnInit {
+
+  // =========================================================
+  // Formulario
+  // =========================================================
   formLogin!: FormGroup;
-  resultado: any = null;
 
-  public user: any = {};
-  public token: any = '';
+  // =========================================================
+  // Estado
+  // =========================================================
+  readonly loading = signal(false);
+  readonly showPassword = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
-  loading = false;
-  errorMessage = '';
+  // =========================================================
+  // Constructor
+  // =========================================================
 
   constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private _router: Router) {
+    private readonly fb: FormBuilder,
+    private readonly authService: AuthService,
+    private readonly router: Router,
+  ) { }
 
-
-  }
+  // =========================================================
+  // Ciclo de vida
+  // =========================================================
 
   ngOnInit(): void {
+    this.initializeForm();
 
-    this.initLoginForm();
-
-    console.log(this.token);
-    if (this.token) {
-      this._router.navigate(['/main']);
-    }
-    else {
-      // Mantener en el componente login
+    /*
+     * Si el usuario ya tiene un access token vigente,
+     * no debe permanecer en el login.
+     */
+    if (this.authService.isAuthenticated()) {
+      this.redirectByRole();
     }
   }
 
-  // Methods
-  initLoginForm(): void {
-    this.formLogin = this.fb.group({
-      email: ['', [Validators.required]],
-      password: ['', Validators.required]     //  ahora sí existe
+  // =========================================================
+  // Inicializar formulario
+  // =========================================================
+  private initializeForm(): void {
+    this.formLogin = this.fb.nonNullable.group({
+      username: [
+        '',
+        [
+          Validators.required,
+          Validators.maxLength(150),
+        ],
+      ],
 
+      password: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(6),
+          Validators.maxLength(100),
+        ],
+      ],
     });
   }
 
-
-  login() {
-    if (this.formLogin.invalid) return;
-    this.loading = true;
-
-    const { email, password } = this.formLogin.value;
-
-    this.authService.login(email, password!).subscribe({
-
-      next: (res) => {
-        // console.log('Login exitoso:', res);
-
-        // Save token & user
-        iziToast.success({
-          title: 'Exito',
-          message: res.message || 'Inicio de sesión exitoso',
-          position: 'bottomRight',
-        });
-
-
-        // Guardar token en localStorage
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('rol', res.usuario.rol);
-        localStorage.setItem('usuario', JSON.stringify(res.usuario));
-
-        // Redirección según rol
-        this._router.navigate(['/main']);
-
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.message || 'Error en el inicio de sesión';
-        this.loading = false;
-      },
-      complete: () => this.loading = false
-    });
+  // =========================================================
+  // Getters del formulario
+  // =========================================================
+  get usernameControl() {
+    return this.formLogin.controls['username'];
   }
 
+  get passwordControl() {
+    return this.formLogin.controls['password'];
+  }
+
+  // =========================================================
+  // Mostrar u ocultar contraseña
+  // =========================================================
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update(
+      (value) => !value,
+    );
+  }
+
+  // =========================================================
+  // Login
+  // =========================================================
+  login(): void {
+    if (this.loading()) {
+      return;
+    }
+
+    this.errorMessage.set(null);
+
+    if (this.formLogin.invalid) {
+      this.formLogin.markAllAsTouched();
+
+      iziToast.warning({
+        title: 'Formulario incompleto',
+        message: 'Revisa el usuario y la contraseña.',
+        position: 'bottomRight',
+      });
+
+      return;
+    }
+
+    const { username, password } = this.formLogin.getRawValue();
+
+    const request: LoginRequest = {
+      username: username.trim(),
+      password,
+    };
+
+    this.loading.set(true);
+
+    this.authService
+      .login(request)
+      .pipe(
+        finalize(() => {
+          this.loading.set(false);
+        }),
+      )
+      .subscribe({
+        next: (response) => {
+          iziToast.success({
+            title: 'Bienvenido',
+            message: response.message || 'Inicio de sesión exitoso.',
+            position: 'bottomRight',
+          });
+
+          this.redirectByRole();
+        },
+
+        error: (
+          error: ApiErrorData,
+        ) => {
+          const message = error.message || 'No se pudo iniciar sesión.';
+
+          this.errorMessage.set(
+            message,
+          );
+
+          iziToast.error({
+            title: 'No se pudo ingresar',
+            message,
+            position: 'bottomRight',
+          });
+        },
+      });
+  }
+
+  // =========================================================
+  // Redirección por rol
+  // =========================================================
+  private redirectByRole(): void {
+    const roles = this.authService.getCurrentRoles();
+    const destination = this.getDestinationByRoles(roles);
+
+    void this.router.navigate(
+      [destination],
+      {
+        replaceUrl: true,
+      },
+    );
+  }
+
+  private getDestinationByRoles(
+    roles: readonly AuthRoleName[],
+  ): string {
+    if (roles.includes('SUPER_ADMIN')) {
+      return '/admin/dashboard';
+    }
+
+    if (
+      roles.some(
+        (role) =>
+          [
+            'ADMIN',
+            'CONTADOR',
+            'EMPLEADO',
+            'USUARIO',
+          ].includes(role),
+      )
+    ) {
+      return '/admin/dashboard';
+    }
+
+    return '/auth/login';
+  }
 }

@@ -1,52 +1,65 @@
+
 import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, catchError, finalize, map, of, switchMap, tap } from 'rxjs';
 import { JwtHelperService } from '@auth0/angular-jwt';
 
 // Environment
+import { environment } from './../../../environments/environment';
 
-import {
-  environment,
-} from '@environments/environment';
-
-// Services
-
-import {
-  AuthStorageService,
-  StoredSession,
-  TokenExpiration,
-} from 'src/app/core/auth/auth-storage.service';
+// Storage
+import { AuthStorageService, StoredSession, TokenExpiration } from './auth-storage.service';
 
 // Helpers
+import { HttpServiceHelper } from './http-service.helper';
 
-import {
-  HttpServiceHelper,
-} from 'src/app/core/auth/http-service.helper';
+// ApiResponse
+import { ApiResponse } from '../interfaces/api-response.model';
 
-// Interfaces
-
-import {
-  AuthJwtPayload,
-  AuthUser,
-  LoginRequest,
-  LoginResponse,
-  LogoutResponse,
-  RefreshTokenResponse,
-  RegisterRequest,
-  RegisterResponse,
-  // RegisterRequest,
-  // RegisterResponse,
-} from './interfaces/';
+// Interfaces de autenticación
+import { AuthRoleName, AuthUser, LoginRequest, LoginResponse, LogoutResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse } from './interfaces';
 
 // =========================================================
-// Respuesta de perfil
+// Respuesta común procesable
 // =========================================================
 
-export interface GetMeResponse {
-  success: boolean;
-  message: string;
-  data: AuthUser;
+type AuthenticationResponse =
+  | LoginResponse
+  | RegisterResponse
+  | RefreshTokenResponse;
+
+// =========================================================
+// Payload real del access token de Aryoria
+// =========================================================
+
+export interface AuthJwtPayload {
+  id_usuario: number;
+  roles: AuthRoleName[];
+  tipo: 'access' | 'refresh';
+  iat: number;
+  exp: number;
+  sub: string;
+  jti?: string;
 }
+
+// =========================================================
+// Perfil
+// =========================================================
+
+export type GetMeResponse =
+  ApiResponse<AuthUser>;
+
+// =========================================================
+// Logout de todos los dispositivos
+// =========================================================
+
+export interface LogoutAllData {
+  sessions_closed: number;
+  current_session_preserved: boolean;
+}
+
+export type LogoutAllResponse =
+  ApiResponse<LogoutAllData>;
 
 // =========================================================
 // Cambiar contraseña
@@ -79,35 +92,56 @@ export class AuthService {
   // Endpoints
   // =========================================================
 
-  private readonly API_BASE = `${environment.main_url}auth`;
+  private readonly API_BASE =
+    `${environment.main_url.replace(/\/+$/, '')}/auth`;
 
-  private readonly API_LOGIN = `${this.API_BASE}/login`;
-  private readonly API_REGISTER = `${this.API_BASE}/register`;
-  private readonly API_LOGOUT = `${this.API_BASE}/logout`;
-  private readonly API_LOGOUT_ALL = `${this.API_BASE}/logout-all`;
-  private readonly API_REFRESH = `${this.API_BASE}/refresh-token`;
-  private readonly API_ME = `${this.API_BASE}/me`;
-  private readonly API_CHANGE_PASSWORD = `${this.API_BASE}/change-password`;
+  private readonly API_LOGIN =
+    `${this.API_BASE}/login`;
+
+  private readonly API_REGISTER =
+    `${this.API_BASE}/register`;
+
+  private readonly API_LOGOUT =
+    `${this.API_BASE}/logout`;
+
+  private readonly API_LOGOUT_ALL =
+    `${this.API_BASE}/logout-all`;
+
+  private readonly API_REFRESH =
+    `${this.API_BASE}/refresh-token`;
+
+  private readonly API_ME =
+    `${this.API_BASE}/me`;
+
+  private readonly API_CHANGE_PASSWORD =
+    `${this.API_BASE}/change-password`;
 
   // =========================================================
-  // Estado de autenticación
+  // Estado
   // =========================================================
-  private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(
-    null,
-  );
 
-  readonly currentUser$ = this.currentUserSubject.asObservable();
+  private readonly currentUserSubject =
+    new BehaviorSubject<AuthUser | null>(
+      null,
+    );
 
-  private readonly sessionCheckedSubject = new BehaviorSubject<boolean>(
-    false,
-  );
+  readonly currentUser$ =
+    this.currentUserSubject
+      .asObservable();
 
-  readonly sessionChecked$ = this.sessionCheckedSubject
-    .asObservable();
+  private readonly sessionCheckedSubject =
+    new BehaviorSubject<boolean>(
+      false,
+    );
+
+  readonly sessionChecked$ =
+    this.sessionCheckedSubject
+      .asObservable();
 
   // =========================================================
   // Constructor
   // =========================================================
+
   constructor() {
     this.initializeSession();
   }
@@ -115,30 +149,37 @@ export class AuthService {
   // =========================================================
   // 1. Login
   // =========================================================
+
   login(
     request: LoginRequest,
   ): Observable<LoginResponse> {
-    const deviceId = this.authStorage.getOrCreateDeviceId();
+    const deviceId =
+      this.authStorage
+        .getOrCreateDeviceId();
 
     const payload: LoginRequest = {
       ...request,
 
-      dispositivo_id: deviceId,
-      tipo_dispositivo: 'WEB',
-      nombre_dispositivo: request.nombre_dispositivo || this.getBrowserName(),
+      dispositivo_id:
+        deviceId,
+
+      tipo_dispositivo:
+        'WEB',
+
+      nombre_dispositivo:
+        request.nombre_dispositivo
+        || this.getBrowserName(),
     };
 
     return this.http.post<LoginResponse>(
       this.API_LOGIN,
       payload,
       {
-        headers: this.getJsonHeaders(),
+        headers:
+          this.getJsonHeaders(),
 
-        /*
-         * Necesario para recibir la cookie HttpOnly
-         * enviada por el backend.
-         */
-        withCredentials: true,
+        withCredentials:
+          true,
       },
     ).pipe(
       tap((response) => {
@@ -159,7 +200,10 @@ export class AuthService {
   // =========================================================
   // 2. Registro público
   // =========================================================
-  register(request: RegisterRequest): Observable<RegisterResponse> {
+
+  register(
+    request: RegisterRequest,
+  ): Observable<RegisterResponse> {
     const deviceId =
       this.authStorage
         .getOrCreateDeviceId();
@@ -167,17 +211,26 @@ export class AuthService {
     const payload: RegisterRequest = {
       ...request,
 
-      dispositivo_id: deviceId,
-      tipo_dispositivo: 'WEB',
-      nombre_dispositivo: request.nombre_dispositivo || this.getBrowserName(),
+      dispositivo_id:
+        deviceId,
+
+      tipo_dispositivo:
+        'WEB',
+
+      nombre_dispositivo:
+        request.nombre_dispositivo
+        || this.getBrowserName(),
     };
 
     return this.http.post<RegisterResponse>(
       this.API_REGISTER,
       payload,
       {
-        headers: this.getJsonHeaders(),
-        withCredentials: true,
+        headers:
+          this.getJsonHeaders(),
+
+        withCredentials:
+          true,
       },
     ).pipe(
       tap((response) => {
@@ -196,10 +249,118 @@ export class AuthService {
   }
 
   // =========================================================
-  // 3. Logout
+  // 3. Refresh token
   // =========================================================
 
-  logout(): Observable<LogoutResponse> {
+  refreshToken():
+    Observable<RefreshTokenResponse> {
+    const deviceId =
+      this.authStorage
+        .getOrCreateDeviceId();
+
+    const browserName =
+      this.getBrowserName();
+
+    return this.http.post<RefreshTokenResponse>(
+      this.API_REFRESH,
+      {
+        /*
+         * No enviamos refresh_token.
+         * El navegador lo envía mediante cookie HttpOnly.
+         */
+        dispositivo_id:
+          deviceId,
+
+        tipo_dispositivo:
+          'WEB',
+
+        nombre_dispositivo:
+          browserName,
+      },
+      {
+        headers:
+          HttpServiceHelper.getHeaders({
+            extraHeaders: {
+              'X-Client-Type':
+                'WEB',
+
+              'X-Device-Id':
+                deviceId,
+
+              'X-Device-Name':
+                browserName,
+            },
+          }),
+
+        withCredentials:
+          true,
+      },
+    ).pipe(
+      tap((response) => {
+        this.processAuthResponse(
+          response,
+        );
+      }),
+
+      catchError((error) =>
+        HttpServiceHelper.handleError(
+          error,
+          'No se pudo renovar la sesión.',
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // 4. Obtener perfil
+  // =========================================================
+
+  getMe():
+    Observable<GetMeResponse> {
+    return this.http.get<GetMeResponse>(
+      this.API_ME,
+      {
+        headers:
+          this.getJsonHeaders(),
+
+        withCredentials:
+          true,
+      },
+    ).pipe(
+      tap((response) => {
+        const usuario =
+          response.data;
+
+        const roles =
+          this.normalizeRoles(
+            usuario.roles,
+          );
+
+        this.authStorage.saveUser(
+          usuario,
+          roles,
+        );
+
+        this.currentUserSubject.next(
+          usuario,
+        );
+      }),
+
+      catchError((error) =>
+        HttpServiceHelper.handleError(
+          error,
+          'No se pudo obtener el usuario autenticado.',
+        ),
+      ),
+    );
+  }
+
+  // =========================================================
+  // 5. Logout
+  // =========================================================
+
+  logout():
+    Observable<LogoutResponse> {
     return this.http.post<LogoutResponse>(
       this.API_LOGOUT,
       {},
@@ -207,7 +368,8 @@ export class AuthService {
         headers:
           this.getJsonHeaders(),
 
-        withCredentials: true,
+        withCredentials:
+          true,
       },
     ).pipe(
       catchError((error) =>
@@ -218,8 +380,8 @@ export class AuthService {
       ),
 
       /*
-       * La información local debe eliminarse incluso si el
-       * backend no se encuentra disponible.
+       * Aunque el backend no responda, limpiamos la
+       * información local.
        */
       finalize(() => {
         this.closeLocalSession();
@@ -228,18 +390,20 @@ export class AuthService {
   }
 
   // =========================================================
-  // 4. Cerrar todas las sesiones
+  // 6. Logout de todos los dispositivos
   // =========================================================
 
-  logoutAll(): Observable<LogoutResponse> {
-    return this.http.post<LogoutResponse>(
+  logoutAll():
+    Observable<LogoutAllResponse> {
+    return this.http.post<LogoutAllResponse>(
       this.API_LOGOUT_ALL,
       {},
       {
         headers:
           this.getJsonHeaders(),
 
-        withCredentials: true,
+        withCredentials:
+          true,
       },
     ).pipe(
       catchError((error) =>
@@ -256,112 +420,6 @@ export class AuthService {
   }
 
   // =========================================================
-  // 5. Renovar sesión
-  // =========================================================
-
-  refreshToken():
-    Observable<RefreshTokenResponse> {
-    const deviceId =
-      this.authStorage
-        .getOrCreateDeviceId();
-
-    return this.http
-      .post<RefreshTokenResponse>(
-        this.API_REFRESH,
-        {
-          dispositivo_id:
-            deviceId,
-
-          tipo_dispositivo:
-            'WEB',
-
-          nombre_dispositivo:
-            this.getBrowserName(),
-        },
-        {
-          headers:
-            HttpServiceHelper.getHeaders({
-              extraHeaders: {
-                'X-Client-Type':
-                  'WEB',
-
-                'X-Device-Id':
-                  deviceId,
-
-                'X-Device-Name':
-                  this.getBrowserName(),
-              },
-            }),
-
-          /*
-           * El navegador enviará automáticamente:
-           *
-           * aryoria_refresh_token
-           */
-          withCredentials: true,
-        },
-      )
-      .pipe(
-        tap((response) => {
-          this.processAuthResponse(
-            response,
-          );
-        }),
-
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudo renovar la sesión.',
-          ),
-        ),
-      );
-  }
-
-  // =========================================================
-  // 6. Obtener usuario autenticado
-  // =========================================================
-
-  getMe(): Observable<GetMeResponse> {
-    return this.http
-      .get<GetMeResponse>(
-        this.API_ME,
-        {
-          headers:
-            this.getJsonHeaders(),
-
-          withCredentials: true,
-        },
-      )
-      .pipe(
-        tap((response) => {
-          const usuario =
-            response.data;
-
-          const roles =
-            this.normalizeRoles(
-              usuario.roles,
-            );
-
-          this.authStorage.saveUser(
-            usuario,
-            roles,
-          );
-
-          this.currentUserSubject.next(
-            usuario,
-          );
-        }),
-
-        catchError((error) =>
-          HttpServiceHelper.handleError(
-            error,
-            'No se pudo obtener el usuario autenticado.',
-          ),
-        ),
-      );
-  }
-
-  // =========================================================
   // 7. Cambiar contraseña
   // =========================================================
 
@@ -375,7 +433,8 @@ export class AuthService {
         headers:
           this.getJsonHeaders(),
 
-        withCredentials: true,
+        withCredentials:
+          true,
       },
     ).pipe(
       catchError((error) =>
@@ -401,13 +460,12 @@ export class AuthService {
       this.authStorage
         .getUser<AuthUser>();
 
-    /*
-     * Si hay un access token vigente, restauramos
-     * inmediatamente el usuario guardado.
-     */
+    // ======================================================
+    // Access token válido
+    // ======================================================
+
     if (
       accessToken
-      && savedUser
       && this.hasValidJwtStructure(
         accessToken,
       )
@@ -415,24 +473,48 @@ export class AuthService {
         accessToken,
       )
     ) {
-      this.currentUserSubject.next(
-        savedUser,
-      );
+      /*
+       * Si también tenemos usuario guardado, restauramos
+       * inmediatamente sin hacer una petición adicional.
+       */
+      if (savedUser) {
+        this.currentUserSubject.next(
+          savedUser,
+        );
 
-      return of(savedUser);
+        return of(savedUser);
+      }
+
+      /*
+       * Existe access token, pero no usuario almacenado.
+       * Recuperamos el perfil desde el backend.
+       */
+      return this.getMe().pipe(
+        map((response) =>
+          response.data,
+        ),
+
+        catchError(() => {
+          this.closeLocalSession();
+
+          return of(null);
+        }),
+      );
     }
 
-    /*
-     * Si existe información local de una sesión anterior,
-     * intentamos renovarla mediante la cookie HttpOnly.
-     *
-     * Angular no necesita ni puede leer el refresh token.
-     */
+    // ======================================================
+    // Access token expirado: intentar refresh
+    // ======================================================
+
     if (
-      savedUser
-      || this.authStorage.getSession()
+      this.authStorage
+        .hasSessionHint()
     ) {
       return this.refreshToken().pipe(
+        /*
+         * processAuthResponse() ya almacena el usuario,
+         * pero /me garantiza información actualizada.
+         */
         switchMap(() =>
           this.getMe(),
         ),
@@ -462,18 +544,16 @@ export class AuthService {
     this.restoreSession()
       .pipe(
         finalize(() => {
-          this.sessionCheckedSubject.next(
-            true,
-          );
+          this.sessionCheckedSubject
+            .next(true);
         }),
       )
       .subscribe({
         error: () => {
           this.closeLocalSession();
 
-          this.sessionCheckedSubject.next(
-            true,
-          );
+          this.sessionCheckedSubject
+            .next(true);
         },
       });
   }
@@ -484,9 +564,7 @@ export class AuthService {
 
   private processAuthResponse(
     response:
-      | LoginResponse
-      | RegisterResponse
-      | RefreshTokenResponse,
+      AuthenticationResponse,
   ): void {
     const {
       access_token,
@@ -494,6 +572,10 @@ export class AuthService {
       sesion,
       usuario,
     } = response.data;
+
+    // ======================================================
+    // Validar access token
+    // ======================================================
 
     if (
       !this.hasValidJwtStructure(
@@ -516,40 +598,104 @@ export class AuthService {
       );
     }
 
+    if (payload.tipo !== 'access') {
+      throw new Error(
+        'El token recibido no es un access token.',
+      );
+    }
+
+    if (
+      Number(payload.id_usuario)
+      !== Number(
+        usuario.id_usuario,
+      )
+    ) {
+      throw new Error(
+        'El access token no pertenece al usuario recibido.',
+      );
+    }
+
+    // ======================================================
+    // Roles
+    // ======================================================
+
     const roles =
       this.normalizeRoles(
         usuario.roles,
       );
 
-    const storedSession: StoredSession = {
-      sessionId: String(sesion.id_refresh_token),
-      dispositivoId: sesion.dispositivo_id || this.authStorage.getOrCreateDeviceId(),
-      tipoDispositivo: sesion.tipo_dispositivo || 'WEB',
-      fechaExpiracion: sesion.fecha_expiracion,
+    if (roles.length === 0) {
+      throw new Error(
+        'El usuario autenticado no tiene roles válidos.',
+      );
+    }
+
+    // ======================================================
+    // Sesión
+    // ======================================================
+
+    const storedSession:
+      StoredSession = {
+      sessionId:
+        String(
+          sesion.id_refresh_token,
+        ),
+
+      dispositivoId:
+        sesion.dispositivo_id
+        || this.authStorage
+          .getOrCreateDeviceId(),
+
+      tipoDispositivo:
+        sesion.tipo_dispositivo
+        || 'WEB',
+
+      fechaExpiracion:
+        sesion.fecha_expiracion,
     };
 
-    const storedExpiration: TokenExpiration = {
-      accessToken: expires_in.access_token,
-      refreshToken: expires_in.refresh_token,
+    // ======================================================
+    // Expiración
+    // ======================================================
+
+    const storedExpiration:
+      TokenExpiration = {
+      accessToken:
+        expires_in.access_token,
+
+      refreshToken:
+        expires_in.refresh_token,
     };
+
+    // ======================================================
+    // Guardar en almacenamiento local
+    // ======================================================
 
     this.authStorage.saveLogin({
-      accessToken: access_token,
-      refreshToken: storedExpiration.refreshToken,
-      expiresIn: storedExpiration,
-      sesion: storedSession,
-      roles,
-      usuario,
+      accessToken:
+        access_token,
 
+      expiresIn:
+        storedExpiration,
+
+      sesion:
+        storedSession,
+
+      roles,
+      usuario: {
+        ...usuario,
+        roles,
+      },
     });
 
-    this.currentUserSubject.next(
-      usuario,
-    );
+    this.currentUserSubject.next({
+      ...usuario,
+      roles,
+    });
   }
 
   // =========================================================
-  // Headers
+  // Headers JSON
   // =========================================================
 
   private getJsonHeaders():
@@ -574,36 +720,36 @@ export class AuthService {
   }
 
   // =========================================================
-  // Roles
+  // Normalizar roles
   // =========================================================
 
   private normalizeRoles(
     roles:
-      | string[]
-      | Array<{
-        nombre: string;
-      }>
+      | readonly AuthRoleName[]
+      | readonly string[]
       | null
       | undefined,
-  ): string[] {
+  ): AuthRoleName[] {
     if (!Array.isArray(roles)) {
       return [];
     }
 
-    return roles
-      .map((role) => {
-        if (typeof role === 'string') {
-          return role;
-        }
+    const validRoles =
+      new Set<string>([
+        'SUPER_ADMIN',
+        'ADMIN',
+        'EMPLEADO',
+        'CONTADOR',
+        'USUARIO',
+      ]);
 
-        return role?.nombre;
-      })
-      .filter(
-        (
-          role,
-        ): role is string =>
-          Boolean(role),
-      );
+    return roles.filter(
+      (
+        role,
+      ): role is AuthRoleName =>
+        typeof role === 'string'
+        && validRoles.has(role),
+    );
   }
 
   // =========================================================
@@ -611,22 +757,22 @@ export class AuthService {
   // =========================================================
 
   private hasValidJwtStructure(
-    token: string | null,
+    token:
+      string | null,
   ): token is string {
     if (!token) {
       return false;
     }
 
-    const normalizedToken =
-      token
-        .replace(
-          /^Bearer\s+/i,
-          '',
-        )
-        .trim();
+    const normalizedToken = token.replace(
+      /^Bearer\s+/i,
+      '',
+    )
+      .trim();
 
     if (
-      normalizedToken === 'null'
+      !normalizedToken
+      || normalizedToken === 'null'
       || normalizedToken ===
       'undefined'
     ) {
@@ -650,9 +796,7 @@ export class AuthService {
   ): boolean {
     try {
       return this.jwtHelper
-        .isTokenExpired(
-          token,
-        );
+        .isTokenExpired(token);
     } catch {
       return true;
     }
@@ -707,19 +851,25 @@ export class AuthService {
     }
 
     if (
-      userAgent.includes('Chrome/')
+      userAgent.includes(
+        'Chrome/',
+      )
     ) {
       return 'Google Chrome';
     }
 
     if (
-      userAgent.includes('Firefox/')
+      userAgent.includes(
+        'Firefox/',
+      )
     ) {
       return 'Mozilla Firefox';
     }
 
     if (
-      userAgent.includes('Safari/')
+      userAgent.includes(
+        'Safari/',
+      )
     ) {
       return 'Safari';
     }
@@ -728,11 +878,12 @@ export class AuthService {
   }
 
   // =========================================================
-  // Cerrar sesión local
+  // Limpiar sesión local
   // =========================================================
 
   closeLocalSession(): void {
-    this.authStorage.clearSession();
+    this.authStorage
+      .clearSession();
 
     this.currentUserSubject.next(
       null,
@@ -743,12 +894,14 @@ export class AuthService {
   // Getters
   // =========================================================
 
-  getAccessToken(): string | null {
+  getAccessToken():
+    string | null {
     return this.authStorage
       .getAccessToken();
   }
 
-  getToken(): string | null {
+  getToken():
+    string | null {
     return this.getAccessToken();
   }
 
@@ -758,7 +911,8 @@ export class AuthService {
       .value;
   }
 
-  getCurrentRoles(): string[] {
+  getCurrentRoles():
+    AuthRoleName[] {
     return this.authStorage
       .getRoles();
   }
@@ -769,7 +923,7 @@ export class AuthService {
   }
 
   // =========================================================
-  // Validar autenticación
+  // Estado de autenticación
   // =========================================================
 
   isAuthenticated(): boolean {
@@ -791,17 +945,13 @@ export class AuthService {
   }
 
   /*
-   * Angular no puede verificar directamente la cookie
-   * HttpOnly. Este método solo indica que existe información
-   * local de una sesión que podría restaurarse.
+   * Angular no puede leer directamente la cookie HttpOnly.
+   * Solo comprobamos que exista información local con la que
+   * intentar restaurar la sesión.
    */
   canRefreshSession(): boolean {
-    return Boolean(
-      this.authStorage
-        .getSession()
-      || this.authStorage
-        .getUser<AuthUser>(),
-    );
+    return this.authStorage
+      .hasSessionHint();
   }
 
   // =========================================================
@@ -809,7 +959,8 @@ export class AuthService {
   // =========================================================
 
   hasRole(
-    requiredRole: string,
+    requiredRole:
+      AuthRoleName,
   ): boolean {
     return this.getCurrentRoles()
       .includes(
@@ -819,7 +970,7 @@ export class AuthService {
 
   hasAnyRole(
     requiredRoles:
-      readonly string[],
+      readonly AuthRoleName[],
   ): boolean {
     const currentRoles =
       this.getCurrentRoles();
@@ -834,9 +985,10 @@ export class AuthService {
 
   hasAllRoles(
     requiredRoles:
-      readonly string[],
+      readonly AuthRoleName[],
   ): boolean {
-    const currentRoles = this.getCurrentRoles();
+    const currentRoles =
+      this.getCurrentRoles();
 
     return requiredRoles.every(
       (role) =>

@@ -1,0 +1,266 @@
+<main class="min-h-dvh bg-base-200 lg:h-dvh lg:overflow-hidden">
+
+  <!-- ===================================================== -->
+  <!-- CONTENEDOR PRINCIPAL -->
+  <!-- ===================================================== -->
+
+  <div class="min-h-dvh lg:flex lg:h-dvh lg:min-h-0">
+
+    <!-- =================================================== -->
+    <!-- PANEL IZQUIERDO -->
+    <!-- =================================================== -->
+
+    <section
+      class="relative hidden overflow-hidden bg-primary text-primary-content lg:flex lg:h-dvh lg:w-[58%] lg:min-w-0 lg:flex-col">
+
+      <!-- Decoración -->
+
+      <div class="pointer-events-none absolute inset-0 overflow-hidden">
+
+        <div class="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/10"></div>
+
+        <div class="absolute -bottom-36 -right-28 h-105 w-105 rounded-full bg-white/10"></div>
+
+        <div class="absolute right-[8%] top-[15%] h-32 w-32 rotate-12 rounded-4xl border border-white/10"></div>
+
+        <div class="absolute bottom-[18%] left-[8%] h-20 w-20 -rotate-12 rounded-2xl border border-white/10"></div>
+
+        <div class="absolute left-[45%] top-[8%] h-2 w-2 rounded-full bg-white/30"></div>
+
+        <div class="absolute bottom-[12%] right-[40%] h-3 w-3 rounded-full bg-white/20"></div>
+
+        <!-- Trama -->
+
+        <div
+          class="absolute inset-0 opacity-[0.06]"
+          style="
+            background-image:
+              linear-gradient(to right, white 1px, transparent 1px),
+              linear-gradient(to bottom, white 1px, transparent 1px);
+            background-size: 48px 48px;
+          ">
+        </div>
+      </div>
+
+      <!-- Contenido izquierdo -->
+
+      <div class="relative z-10 flex h-full min-h-0 w-full flex-col px-8 py-7 xl:px-12 xl:py-9 2xl:px-16 2xl:py-11">
+
+        <!-- Marca -->
+
+        <header class="shrink-0">
+
+          <a
+            href="/"
+            class="inline-flex items-center gap-3 rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80">
+
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-lg shadow-black/10 xl:h-12 xl:w-12">
+
+              <span class="text-lg font-black text-primary xl:text-xl">
+                A
+              </span>
+            </div>
+
+            <div>
+              <p class="text-xl font-black tracking-tight xl:text-2xl">
+                Aryoria
+              </p>
+
+              <p class="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-primary-content/60 xl:text-xs">
+                Control financiero empresarial
+              </p>
+            </div>
+          </a>
+        </header>
+
+        <!-- Contenido central -->
+
+        <div class="flex min-h-0 flex-1 items-center">
+
+          <div class="w-full max-w-3xl py-6">
+
+            <span
+              class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.16em] backdrop-blur-sm xl:text-xs">
+
+              <i class="fa-solid fa-wallet"></i>
+
+              Finanzas bajo control
+            </span>
+
+            <h1 class="mt-6 max-w-2xl text-3xl font-black leading-[1.08] tracking-tight xl:text-4xl 2xl:text-5xl">
+
+              Comprende mejor las finanzas de tu empresa
+
+            </h1>
+
+            <p class="mt-5 max-w-xl text-sm leading-6 text-primary-content/70 xl:text-base xl:leading-7">
+
+              Registra movimientos, consulta reportes y analiza tu flujo contable desde cualquier dispositivo.
+
+            </p>
+
+            <!-- Indicadores -->
+
+            <div class="mt-8 flex max-w-2xl gap-3 xl:gap-4">
+
+              <!-- Control financiero -->
+
+              <article class="min-w-0 flex-1 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-sm">
+
+                  <i class="fa-solid fa-arrow-trend-up"></i>
+
+                </div>
+
+                <p class="mt-3 text-xl font-black">
+                  100%
+                </p>
+
+                <p class="mt-1 text-[10px] leading-4 text-primary-content/60 xl:text-xs">
+                  Control financiero
+                </p>
+              </article>
+
+              <!-- Disponibilidad -->
+
+              <article class="min-w-0 flex-1 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-sm">
+
+                  <i class="fa-solid fa-chart-column"></i>
+
+                </div>
+
+                <p class="mt-3 text-xl font-black">
+                  24/7
+                </p>
+
+                <p class="mt-1 text-[10px] leading-4 text-primary-content/60 xl:text-xs">
+                  Información disponible
+                </p>
+              </article>
+
+              <!-- Seguridad -->
+
+              <article class="min-w-0 flex-1 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+
+                <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-sm">
+
+                  <i class="fa-solid fa-shield-halved"></i>
+
+                </div>
+
+                <p class="mt-3 text-xl font-black">
+                  Seguro
+                </p>
+
+                <p class="mt-1 text-[10px] leading-4 text-primary-content/60 xl:text-xs">
+                  Sesiones protegidas
+                </p>
+              </article>
+            </div>
+
+            <!-- Beneficios -->
+
+            <div class="mt-6 hidden max-w-3xl gap-3 2xl:flex">
+
+              @for (
+                benefit of benefits();
+                track benefit.title
+              ) {
+                <article class="min-w-0 flex-1 rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
+
+                  <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-sm">
+
+                    <i [class]="benefit.icon"></i>
+
+                  </div>
+
+                  <h2 class="mt-3 text-sm font-bold">
+                    {{ benefit.title }}
+                  </h2>
+
+                  <p class="mt-1.5 line-clamp-2 text-xs leading-5 text-primary-content/60">
+                    {{ benefit.description }}
+                  </p>
+                </article>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer izquierdo -->
+
+        <footer class="shrink-0 text-[10px] text-primary-content/50 xl:text-xs">
+
+          © {{ currentYear }} Aryoria. Todos los derechos reservados.
+
+        </footer>
+      </div>
+    </section>
+
+    <!-- =================================================== -->
+    <!-- PANEL DERECHO -->
+    <!-- =================================================== -->
+
+    <section
+      class="flex min-h-dvh min-w-0 flex-col bg-base-100 lg:h-dvh lg:w-[42%] lg:min-h-0">
+
+      <!-- Encabezado móvil -->
+
+      <header class="flex shrink-0 items-center justify-between border-b border-base-300 bg-base-100 px-5 py-4 lg:hidden">
+
+        <a
+          href="/"
+          class="flex items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-content shadow-sm">
+
+            <span class="font-black">
+              A
+            </span>
+          </div>
+
+          <div>
+            <p class="font-black leading-none text-base-content">
+              Aryoria
+            </p>
+
+            <p class="mt-1 text-[10px] font-medium text-base-content/50">
+              Control financiero
+            </p>
+          </div>
+        </a>
+
+        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-success/10 text-success">
+
+          <i class="fa-solid fa-shield-halved text-sm"></i>
+
+        </div>
+      </header>
+
+      <!-- Formulario -->
+
+      <div class="min-h-0 flex-1 overflow-y-auto">
+
+        <div class="flex min-h-full items-center justify-center px-4 py-7 sm:px-8 sm:py-10 lg:px-8 lg:py-6 xl:px-12">
+
+          <div class="w-full max-w-md">
+
+            <router-outlet></router-outlet>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer móvil -->
+
+      <footer class="shrink-0 border-t border-base-300 bg-base-100 px-5 py-3 text-center text-[10px] text-base-content/45 lg:hidden">
+
+        © {{ currentYear }} Aryoria
+
+      </footer>
+    </section>
+  </div>
+</main>

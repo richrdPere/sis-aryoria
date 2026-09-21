@@ -146,8 +146,7 @@ export class HttpServiceHelper {
   // *********************************************************
   static buildError(
     error: unknown,
-    fallbackMessage =
-      'Ocurrió un error al procesar la solicitud.',
+    fallbackMessage = 'Ocurrió un error al procesar la solicitud.',
   ): ApiErrorData {
     if (!(error instanceof HttpErrorResponse)) {
       return {

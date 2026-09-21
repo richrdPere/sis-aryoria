@@ -4,8 +4,9 @@ import { RouterOutlet } from '@angular/router';
 // Pipe
 import { CapitalizePipe } from 'src/app/pipes/capitalize.pipe';
 import { SidebarMainComponent } from "../components/sidebar-main/sidebar-main.component";
-import { AuthService } from 'src/app/services/auth.service';
+
 import { NavbarMainComponent } from "../components/navbar-main/navbar-main.component";
+import { AuthService } from 'src/app/core/auth/auth.service';
 
 @Component({
   selector: 'app-layout-admin',
@@ -22,8 +23,8 @@ export class LayoutAdminComponent {
     const usuario = authService.getCurrentUser()
 
     if (usuario) {
-      this.rol = usuario.rol;
-      this.nombre = usuario.nombre;
+      this.rol = usuario.roles[0];
+      this.nombre = usuario.persona?.nombres!;
     }
   }
 }
