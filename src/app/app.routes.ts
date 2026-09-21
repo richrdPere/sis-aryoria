@@ -1,20 +1,20 @@
 import { Routes } from '@angular/router';
 
 // Guard
-import { RoleGuard } from './guards/role.guard';
+import { RoleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   // --- Layout publico ---
   {
     path: '',
-    loadChildren: () => import('./layout/dashboard-auth/auth.routes').then((m) => m.authRoutes),
+    loadChildren: () => import('./layouts/dashboard-auth/auth.routes').then((m) => m.authRoutes),
   },
   // --- Layout Admin (rutas privadas, lazy loading)
   {
     path: 'main',
     canActivate: [RoleGuard],
     data: { roles: ['admin', 'cliente', 'empleado'] },
-    loadChildren: () => import('./layout/dashboard-admin/admin.routes').then((m) => m.adminRoutes),
+    loadChildren: () => import('./layouts/dashboard-admin/admin.routes').then((m) => m.adminRoutes),
   },
 
 
